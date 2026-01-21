@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Login from "./components/Auth/Login";
 import EmployeeDashboard from "./components/Dashboard/EmployeeDashboard";
 import AdminDashboard from "./components/Dashboard/AdminDashboard";
@@ -10,23 +10,23 @@ const App = () => {
   const [userData, SetUserData] = useContext(AuthContext);
 
   // console.log(userData);
- 
-  useEffect(()=>{
+
+  useEffect(() => {
     const loggedInUser = localStorage.getItem('loggedInUser')
 
-    if(loggedInUser){
+    if (loggedInUser) {
       const userData = JSON.parse(loggedInUser)
       setUser(userData.role)
       setLoggedInUserData(userData.data)
     }
 
-  },[])
+  }, [])
 
   const handleLogin = (email, password) => {
     if (email == "a@a.com" && password == "123") {
       setUser("admin");
       // setLoggedInUserData(userData);
-      localStorage.setItem("loggedInUser", JSON.stringify({ role: "admin",data : null }));
+      localStorage.setItem("loggedInUser", JSON.stringify({ role: "admin", data: null }));
     } else if (userData) {
       const employee = userData.find(
         (e) => email == e.email && e.password == password
@@ -42,7 +42,7 @@ const App = () => {
     } else {
       alert("Invalid Credentials");
     }
-  }; 
+  };
 
   return (
     <>
