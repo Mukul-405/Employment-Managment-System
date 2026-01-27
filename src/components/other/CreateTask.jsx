@@ -12,36 +12,64 @@ const CreateTask = () => {
 
   const [newTask, setNewTask] = useState({});
 
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
 
-    setNewTask({
+    const payload = {
       taskTitle,
       taskDescription,
       taskDate,
       category,
-      active: false,
-      newTask: true,
-      failed: false,
-      completed: false,
-    });
+      asignTo
+    };
 
-    const data = userData;
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'https://employment-managment-system-backend.onrender.com';
+      const response = await fetch(`${baseUrl}/create_task`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
 
-    data.forEach(function (elem) {
-      if (asignTo == elem.firstName) {
-        elem.tasks.push(newTask);
-        elem.taskCounts.newTask = elem.taskCounts.newTask + 1;
+      if (data.success) {
+        alert("Task Created Successfully");
+
+        // Instant Update
+        const updatedUserData = userData.map(user => {
+          if (user.name === asignTo) {
+            const newTask = {
+              title: taskTitle,
+              description: taskDescription,
+              date: taskDate,
+              category: category,
+              active: false,
+              newTask: true,
+              failed: false,
+              completed: false
+            };
+            return {
+              ...user,
+              tasks_new: [...(user.tasks_new || []), newTask]
+            };
+          }
+          return user;
+        });
+        setUserData(updatedUserData);
+
+        setTaskTitle("");
+        setCategory("");
+        setAsignTo("");
+        setTaskDate("");
+        setTaskDescription("");
+        // Optional: Request context refresh if needed, but for now just clear form
+      } else {
+        alert("Failed to create task: " + data.message);
       }
-    });
-    setUserData(data);
-    console.log(data);
-
-    setTaskTitle("");
-    setCategory("");
-    setAsignTo("");
-    setTaskDate("");
-    setTaskDescription("");
+    } catch (error) {
+      console.error("Error creating task:", error);
+      alert("Error creating task");
+    }
   };
 
   return (
@@ -78,15 +106,18 @@ const CreateTask = () => {
           </div>
           <div>
             <h3 className="text-sm text-gray-300 mb-0.5">Asign to</h3>
-            <input
+            <select
               value={asignTo}
               onChange={(e) => {
                 setAsignTo(e.target.value);
               }}
-              className="text-sm py-1 px-2 w-4/5 rounded outline-none bg-transparent border-[1px] border-gray-400 mb-4"
-              type="text"
-              placeholder="employee name"
-            />
+              className="text-sm py-1 px-2 w-4/5 rounded outline-none bg-white text-black border-[1px] border-gray-400 mb-4"
+            >
+              <option value="" disabled>Select Employee</option>
+              {userData && userData.map((user, idx) => (
+                <option key={idx} value={user.name}>{user.name}</option>
+              ))}
+            </select>
           </div>
           <div>
             <h3 className="text-sm text-gray-300 mb-0.5">Category</h3>
@@ -123,57 +154,3 @@ const CreateTask = () => {
 };
 
 export default CreateTask;
-
-// import React from "react";
-
-// const CreateTask = () => {
-//   return (
-//     <div className="p-5 mt-7 rounded bg-[#1c1c1c]">
-//       <form className="flex flex-wrap w-full items-start justify-between">
-//         <div className="w-1/2">
-//           <div>
-//             <h3 className="text-sm text-gray-300 mb-0.5">Task Title</h3>
-//             <input
-//               className="text-sm py-1 px-2 w-4/5 rounded outline-none bg-transparent border-[1px] border-gray-400 mb-4"
-//               type="text"
-//               placeholder="Enter the UI Design"
-//             />
-//           </div>
-//           <div>
-//             <h3 className="text-sm text-gray-300 mb-0.5">Date</h3>
-//             <input
-//               className="text-sm py-1 px-2 w-4/5 rounded outline-none bg-transparent border-[1px] border-gray-400 mb-4"
-//               type="date"
-//             />
-//           </div>
-//           <div>
-//             <h3 className="text-sm text-gray-300 mb-0.5">Assign To</h3>
-//             <input
-//               className="text-sm py-1 px-2 w-4/5 rounded outline-none bg-transparent border-[1px] border-gray-400 mb-4"
-//               type="text"
-//               placeholder="Employee Name"
-//             />
-//           </div>
-//           <div>
-//             <h3 className="text-sm text-gray-300 mb-0.5">Catogory</h3>
-//             <input
-//               className="text-sm py-1 px-2 w-4/5 rounded outline-none bg-transparent border-[1px] border-gray-400 mb-4"
-//               type="text"
-//               placeholder="Enter Task Dev,vid etc"
-//             />
-//           </div>
-//         </div>
-
-//         <div className="w-1/2">
-//           <h3 className="text-sm text-gray-300 mb-0.5">Discription</h3>
-//           <textarea className="w-full h-44 text-sm py-2 px-4 rounded outline-none bg-transparent border-[1px] border-gray-400"></textarea>
-//           <button className="bg-emerald-500 py-3 px-5 hover:bg-emerald-600 rounded text-sm mt-4 w-full">
-//             Create Task
-//           </button>
-//         </div>
-//       </form>
-//     </div>
-//   );
-// };
-
-// export default CreateTask;
