@@ -1,5 +1,6 @@
 import React, { useContext, useState } from "react";
 import { AuthContext } from "../../context/AuthProvider";
+import Loader from "./Loader";
 
 const CreateTask = () => {
   const [userData, setUserData] = useContext(AuthContext);
@@ -9,11 +10,13 @@ const CreateTask = () => {
   const [taskDate, setTaskDate] = useState("");
   const [asignTo, setAsignTo] = useState("");
   const [category, setCategory] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const [newTask, setNewTask] = useState({});
 
   const submitHandler = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
     const payload = {
       taskTitle,
@@ -69,11 +72,14 @@ const CreateTask = () => {
     } catch (error) {
       console.error("Error creating task:", error);
       alert("Error creating task");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="p-5 bg-[#1c1c1c] mt-5 rounded">
+      {isLoading && <Loader />}
       <form
         onSubmit={(e) => {
           submitHandler(e);

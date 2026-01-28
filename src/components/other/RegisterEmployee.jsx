@@ -1,14 +1,17 @@
 import React, { useContext, useState } from 'react'
 import { AuthContext } from '../../context/AuthProvider'
+import Loader from './Loader'
 
 const RegisterEmployee = () => {
     const [userData, setUserData] = useContext(AuthContext);
     const [firstName, setFirstName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
 
     const submitHandler = async (e) => {
         e.preventDefault()
+        setIsLoading(true)
 
         try {
             const baseUrl = import.meta.env.VITE_API_URL || 'https://employment-managment-system-backend.onrender.com';
@@ -49,11 +52,14 @@ const RegisterEmployee = () => {
         } catch (error) {
             console.error("Error registering employee:", error);
             alert("Error registering employee");
+        } finally {
+            setIsLoading(false)
         }
     }
 
     return (
         <div className='p-5 bg-[#1c1c1c] mt-5 rounded'>
+            {isLoading && <Loader />}
             <form onSubmit={submitHandler} className='flex flex-wrap w-full items-start justify-between'>
                 <div className='w-full mb-4'>
                     <h3 className='text-lg font-medium text-white mb-2'>Register New Employee</h3>

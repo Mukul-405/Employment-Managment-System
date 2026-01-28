@@ -3,11 +3,13 @@ import Login from "./components/Auth/Login";
 import EmployeeDashboard from "./components/Dashboard/EmployeeDashboard";
 import AdminDashboard from "./components/Dashboard/AdminDashboard";
 import { AuthContext } from "./context/AuthProvider";
+import Loader from "./components/other/Loader";
 
 const App = () => {
   const [user, setUser] = useState(null);
   const [loggedInUserData, setLoggedInUserData] = useState(null);
   const [userData, SetUserData] = useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(false);
 
   // console.log(userData);
 
@@ -21,6 +23,9 @@ const App = () => {
 
       // Fetch fresh data
       if (userData.role === 'admin') {
+        // isLoading not strictly needed here as it's background refresh usually, 
+        // but can add if we want to block initial load.
+        // For now, keeping it background/silent mostly or we can block if user is null.
         const baseUrl = import.meta.env.VITE_API_URL || 'https://employment-managment-system-backend.onrender.com';
         fetch(`${baseUrl}/employees`)
           .then(res => res.json())
@@ -32,22 +37,12 @@ const App = () => {
           })
           .catch(err => console.error("Failed to refresh admin data", err));
       } else if (userData.role === 'employee') {
-        // userData.data is the employee object
-        // We need email to fetch. stored e.g. { role: "employee", data: { email: "..." } }
         const email = userData.data.email;
         const baseUrl = import.meta.env.VITE_API_URL || 'https://employment-managment-system-backend.onrender.com';
         fetch(`${baseUrl}/employee/${email}`)
           .then(res => res.json())
           .then(resData => {
             if (resData.success) {
-              setLoggedInUserData(resData.data); // data is array? check server.js
-              // Server /employee/:email returns { data: employeeData (array), user_details: obj }
-              // EmployeeData returns array of rows. So data is array of 1.
-              // Let's use user_details? No, user_details is raw row. 
-              // EmployeeData result is what we want (processed maybe? No, it's just raw rows).
-              // In handleLogin: employee = userData.find... 
-              // Let's trust resData.data[0] or resData.user_details? 
-              // server.js /employee/:email -> returns data: employeeData (array)
               const employee = resData.data[0];
               setLoggedInUserData(employee);
               localStorage.setItem("loggedInUser", JSON.stringify({ role: "employee", data: employee }));
@@ -60,6 +55,7 @@ const App = () => {
   }, [])
 
   const handleLogin = async (email, password) => {
+    setIsLoading(true);
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'https://employment-managment-system-backend.onrender.com';
       const response = await fetch(`${baseUrl}/login`, {
@@ -91,10 +87,13 @@ const App = () => {
     } catch (error) {
       console.error("Login failed", error);
       alert("Login failed: " + error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleAcceptTask = async (taskTitle) => {
+    setIsLoading(true);
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'https://employment-managment-system-backend.onrender.com';
       const response = await fetch(`${baseUrl}/accept_task`, {
@@ -115,10 +114,13 @@ const App = () => {
       }
     } catch (error) {
       console.error("Error accepting task", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleCompleteTask = async (taskTitle) => {
+    setIsLoading(true);
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'https://employment-managment-system-backend.onrender.com';
       const response = await fetch(`${baseUrl}/complete_task`, {
@@ -136,10 +138,13 @@ const App = () => {
       }
     } catch (error) {
       console.error("Error completing task", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleFailTask = async (taskTitle) => {
+    setIsLoading(true);
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'https://employment-managment-system-backend.onrender.com';
       const response = await fetch(`${baseUrl}/fail_task`, {
@@ -157,11 +162,14 @@ const App = () => {
       }
     } catch (error) {
       console.error("Error failing task", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <>
+      {isLoading && <Loader />}
       {!user ? <Login handleLogin={handleLogin} /> : ""}
       {user == "admin" ? (
         <AdminDashboard changeUser={setUser} />
